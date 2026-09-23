@@ -17,14 +17,40 @@
       margin-bottom: 10px;
     }
 
-    p.description {
+    .desc {
       color: #666;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
+    }
+
+    .controls {
+      margin: 20px 0;
+    }
+
+    button {
+      padding: 8px 16px;
+      margin: 0 8px;
+      border: none;
+      border-radius: 6px;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .page-info {
+      margin: 10px 0;
+      font-size: 16px;
+      color: #333;
     }
 
     .gallery {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
       gap: 18px;
       max-width: 1500px;
       margin: 0 auto;
@@ -43,6 +69,7 @@
       object-fit: cover;
       border-radius: 8px;
       display: block;
+      background: #eee;
     }
 
     .filename {
@@ -51,37 +78,118 @@
       color: #333;
       word-break: break-all;
     }
+
+    .jump-box {
+      margin-top: 15px;
+    }
+
+    input[type="number"] {
+      width: 90px;
+      padding: 6px;
+      font-size: 14px;
+      margin-right: 8px;
+    }
   </style>
 </head>
 <body>
 
   <h1>Electric AI Image Dataset</h1>
-  <p class="description">Conductor Images (Total: 2229)</p>
+  <div class="desc">Page display for 2229 images</div>
+
+  <div class="controls">
+    <button id="prevBtn">上一页</button>
+    <button id="nextBtn">下一页</button>
+    <div class="page-info" id="pageInfo"></div>
+
+    <div class="jump-box">
+      跳转到第
+      <input type="number" id="pageInput" min="1">
+      页
+      <button id="jumpBtn">跳转</button>
+    </div>
+  </div>
 
   <div class="gallery" id="gallery"></div>
 
   <script>
+    const totalImages = 2229;       // 总图片数
+    const perPage = 100;            // 每页显示100张
+    const totalPages = Math.ceil(totalImages / perPage);
+
+    let currentPage = 1;
+
     const gallery = document.getElementById("gallery");
+    const pageInfo = document.getElementById("pageInfo");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const jumpBtn = document.getElementById("jumpBtn");
+    const pageInput = document.getElementById("pageInput");
 
-    for (let i = 2; i <= 2230; i++) {
-      const num = String(i).padStart(3, '0');
-      const fileName = `Conductor_${num}.png`;
+    function renderPage(page) {
+      gallery.innerHTML = "";
 
-      const card = document.createElement("div");
-      card.className = "card";
+      const start = (page - 1) * perPage + 1;
+      const end = Math.min(page * perPage, totalImages);
 
-      const img = document.createElement("img");
-      img.src = fileName;
-      img.alt = fileName;
+      for (let displayNum = start; displayNum <= end; displayNum++) {
+        // 当前仓库真实文件名仍然是 Conductor_002.png 到 Conductor_2230.png
+        const realNum = String(displayNum + 1).padStart(3, '0');
+        const realFileName = `Conductor_${realNum}.png`;
 
-      const name = document.createElement("div");
-      name.className = "filename";
-      name.textContent = fileName;
+        // 页面上显示成纯数字
+        const shownFileName = `${displayNum}.png`;
 
-      card.appendChild(img);
-      card.appendChild(name);
-      gallery.appendChild(card);
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const img = document.createElement("img");
+        img.src = realFileName;
+        img.alt = shownFileName;
+        img.loading = "lazy";
+
+        const name = document.createElement("div");
+        name.className = "filename";
+        name.textContent = shownFileName;
+
+        card.appendChild(img);
+        card.appendChild(name);
+        gallery.appendChild(card);
+      }
+
+      pageInfo.textContent = `第 ${page} / ${totalPages} 页（显示 ${start} - ${end}）`;
+
+      prevBtn.disabled = page === 1;
+      nextBtn.disabled = page === totalPages;
     }
+
+    prevBtn.addEventListener("click", () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderPage(currentPage);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    });
+
+    nextBtn.addEventListener("click", () => {
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderPage(currentPage);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    });
+
+    jumpBtn.addEventListener("click", () => {
+      const page = parseInt(pageInput.value);
+      if (!isNaN(page) && page >= 1 && page <= totalPages) {
+        currentPage = page;
+        renderPage(currentPage);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        alert(`请输入 1 到 ${totalPages} 之间的页码`);
+      }
+    });
+
+    renderPage(currentPage);
   </script>
 
 </body>
