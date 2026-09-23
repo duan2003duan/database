@@ -1,0 +1,9 @@
+names:
+  0: tower
+  1: conductor
+  2: insulator
+  3: transformer
+  4: photovoltaic_panel
+  5: wind_turbine
+path: .
+train: train.txt
